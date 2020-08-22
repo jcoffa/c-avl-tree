@@ -150,18 +150,12 @@ void *avlFind(AvlTree *tree, int (*compare)(const void *, const void *), const v
 
 
 /*
- * Returns a string representing the AvlTree using the tree's `printData` function pointer
- * to create the string.
- * The `traversal` argument determines which tree traversal method is used to iterate over
- * the data, and can be any of the following:
- *  - Preorder   (Depth-first search)
- *  - Inorder    (Depth-first search)
- *  - Postorder  (Depth-first search)
- *  - Levelorder (Breadth-first search)
+ * Returns a string representation of the AvlTree using the tree's
+ * `printData` function pointer to create the string.
  *
  * The string must be freed by the calling function after use.
  */
-char *avlToString(AvlTree *tree, TraversalType traversal);
+char *avlToString(AvlTree *tree);
 
 
 /*
@@ -169,7 +163,7 @@ char *avlToString(AvlTree *tree, TraversalType traversal);
  * and then freeing the string that was created after printing it.
  * A newline is printed after the tree-string is done printing.
  */
-void avlPrintTree(AvlTree *tree, TraversalType traversal);
+void avlPrintTree(AvlTree *tree);
 
 
 /*

@@ -33,6 +33,14 @@ static AvlNode *avlNodeNew(void *data) {
 
 
 /*
+ * Returns true if the given node has no children, and false otherwise.
+ */
+static bool avlNodeIsLeaf(AvlNode *node) {
+	return (node->left == NULL && node->right == NULL);
+}
+
+
+/*
  * Deletes every node in the tree.
  */
 static void avlClearTree_node(AvlNode *root, void (*delete)(void *)) {
@@ -118,13 +126,43 @@ static AvlNode *avlFind_node(AvlNode *root, int (*compare)(const void *, const v
 
 
 /*
- * A family of functions which turn an AVL tree into a string representation.
- * The traversal method determines what order the nodes are visited in.
+ * Turns an AVL string into a string representation of its structure.
+ *
+ * `str` contains the string representation of the tree after the function terminates.
+ * Memory for it is allocated inside the function, and must be freed after use.
+ *
+ * Returns the length of `str`.
  */
-static char *avlToString_Preorder(AvlNode *root, char *(printData)(void*)) {return NULL;}
-static char *avlToString_Inorder(AvlNode *root, char *(printData)(void*)) {return NULL;}
-static char *avlToString_Postorder(AvlNode *root, char *(printData)(void*)) {return NULL;}
-static char *avlToString_Levelorder(AvlNode *root, char *(printData)(void*), Queue *queue) {return NULL;}
+static size_t avlToString_node(AvlNode *root, char *(printData)(void*), char **str) {
+	char *thisNodeStr, *leftStr, *rightStr;
+	size_t len;
+
+	if (root == NULL) {
+		*str = malloc(sizeof(char) * 5);
+		strcpy(*str, "NONE");
+		return 4;
+	}
+
+	thisNodeStr = printData(root);
+	len = strlen(thisNodeStr);
+
+	// The string is simpler if this node has no children
+	if (avlNodeIsLeaf(root)) {
+		*str = thisNodeStr;
+		return len;
+	}
+
+	len += avlToString_node(root->left, printData, &leftStr);
+	len += avlToString_node(root->right, printData, &rightStr);
+	len += 12; // +12 for extra formatting characters
+
+	*str = malloc(len + 1); // +1 for null terminator
+	snprintf(*str, len+1, "(%s, l: %s, r: %s)", thisNodeStr, leftStr, rightStr);
+	free(leftStr);
+	free(rightStr);
+
+	return len;
+}
 
 
 /*
@@ -256,14 +294,7 @@ void *avlFind(AvlTree *tree, int (*compare)(const void *, const void *), const v
 }
 
 
-/* These dummy functions are needed to initialize a Queue for the Levelorder traversal.
- * The queue is only used to enqueue and dequeue elements (theres no deletion or printing)
- * so its fine that these are only dummy functions that don't do anything.
- */
-static inline void dummyQueueDelete(void *a) {return;}
-static inline char *dummyQueuePrint(void *a) {return NULL;}
-
-char *avlToString(AvlTree *tree, TraversalType traversal) {
+char *avlToString(AvlTree *tree) {
 	char *toReturn;
 
 	if (tree == NULL) {
@@ -272,37 +303,24 @@ char *avlToString(AvlTree *tree, TraversalType traversal) {
 		return toReturn;
 	}
 
-	Queue *queue;
-	switch (traversal) {
-		case Preorder:
-			toReturn = avlToString_Preorder(tree->root, tree->printData);
-			break;
-
-		case Inorder:
-			toReturn = avlToString_Inorder(tree->root, tree->printData);
-			break;
-
-		case Postorder:
-			toReturn = avlToString_Postorder(tree->root, tree->printData);
-			break;
-
-		case Levelorder:
-			queue = queueNew(dummyQueueDelete, dummyQueuePrint);
-			toReturn = avlToString_Levelorder(tree->root, tree->printData, queue);
-			queueFree(queue);
-			break;
-	}
-
+	avlToString_node(tree->root, tree->printData, &toReturn);
 	return toReturn;
 }
 
 
-void avlPrintTree(AvlTree *tree, TraversalType traversal) {
-	char *toPrint = avlToString(tree, traversal);
+void avlPrintTree(AvlTree *tree) {
+	char *toPrint = avlToString(tree);
 	printf("%s\n", toPrint);
 	free(toPrint);
 }
 
+
+/* These dummy functions are needed to initialize a Queue for the Levelorder traversal.
+ * The queue is only used to enqueue and dequeue elements (theres no deletion or printing)
+ * so its fine that these are only dummy functions that don't do anything.
+ */
+static inline void dummyQueueDelete(void *a) {return;}
+static inline char *dummyQueuePrint(void *a) {return NULL;}
 
 void avlMapTree(AvlTree *tree, TraversalType traversal, void (*func)(void *)) {
 	if (tree == NULL || func == NULL) {
