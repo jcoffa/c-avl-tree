@@ -9,12 +9,12 @@ VPATH := $(SRC):$(HED):$(BIN)
 
 # Files
 LIB = libavltree.so
-SRCS := $(wildcard $(SRC)/*.c)
-HEDS := $(wildcard $(HED)/*.h)
+SRCS := $(wildcard $(SRC)/*.c) Queue/src/Queue.c
+HEDS := $(wildcard $(HED)/*.h) Queue/include/Queue.h
 OBJS := $(addprefix $(BIN)/,$(notdir $(SRCS:%.c=%.o)))
 
 # Compilation options
-CFLAGS := -std=c99 -Wall -Wpedantic -I$(SRC) -I$(HED) -I$(BIN) -O2
+CFLAGS := -std=c99 -Wall -Wpedantic $(addprefix -I,$(SRC) $(HED) $(BIN) Queue/include) -O2
 
 
 ##############
@@ -26,7 +26,10 @@ all: $(LIB) move
 $(LIB): $(OBJS)
 	gcc -g -shared $(OBJS) -o $(BIN)/$(LIB)
 
-$(BIN)/%.o: $(SRC)/%.c $(HED)/%.h
+Queue.o: Queue/src/Queue.c Queue/include/Queue.h
+	gcc $(CLFAGS) -c -fpic $< -o $(BIN)/$@
+
+$(BIN)/%.o: src/%.c include/%.h
 	gcc -g $(CFLAGS) -c -fpic $< -o $@
 
 
@@ -50,4 +53,6 @@ echo:
 	@echo OBJS = $(OBJS)
 	@echo
 	@echo LIB = $(LIB)
+	@echo
+	@echo CLFAGS = $(CFLAGS)
 

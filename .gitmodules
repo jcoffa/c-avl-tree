@@ -1,0 +1,3 @@
+[submodule "Queue"]
+	path = Queue
+	url = https://gitlab.com/jcoffa/Queue
